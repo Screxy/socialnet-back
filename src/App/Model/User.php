@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace App\Model;
 
-use InvalidArgumentException;
-
 class User extends ActiveRecordEntity
 {
+    protected string $username;
     protected string $email;
     protected string $password;
     protected ?string $accessToken = null;
 
     protected static function getTableName(): string
     {
-        return 'user';
+        return 'users';
     }
 
     public function getEmail(): string
@@ -45,5 +44,15 @@ class User extends ActiveRecordEntity
     public function setAccessToken(string $accessToken): void
     {
         $this->accessToken = $accessToken;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): void
+    {
+        $this->username = $username;
     }
 }

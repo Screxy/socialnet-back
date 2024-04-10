@@ -75,9 +75,12 @@ readonly class UserController
             if (User::where('email', '=', $body['email'])) {
                 throw UserAlreadyExists::create();
             }
-
+            if (User::where('username', '=', $body['username'])) {
+                throw UserAlreadyExists::create();
+            }
             $userData = [
                 $body['email'],
+                $body['username'],
             ];
 
             $zxcvbn = new Zxcvbn();
@@ -95,6 +98,7 @@ readonly class UserController
 
             $user = new User();
             $user->setEmail($body['email']);
+            $user->setUsername($body['username']);
             $user->setPassword($body['password']);
             $user->save();
 

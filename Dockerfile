@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+RUN pecl install xdebug && docker-php-ext-enable xdebug
+
 FROM environment as builder
 
 COPY . .
@@ -28,5 +30,6 @@ FROM environment as final
 COPY --from=builder /var/www/vendor /var/www/vendor
 COPY --from=builder /var/www/composer.lock /var/www/composer.lock
 ADD config/php/php.ini /usr/local/etc/php
+ADD config/php/xdebug.ini /usr/local/etc/php/conf.d
 
 CMD ["php-fpm"]

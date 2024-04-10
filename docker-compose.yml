@@ -30,6 +30,8 @@ services:
           - internal
         env_file:
           - .env
+        environment:
+          PHP_IDE_CONFIG: "serverName=Docker"
     mysql:
         image: mysql:8.0
         container_name: mysql
