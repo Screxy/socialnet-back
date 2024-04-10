@@ -1,0 +1,48 @@
+version: '1'
+
+networks:
+    internal:
+
+services:
+    nginx:
+        image: nginx:stable-alpine
+        container_name: nginx
+        ports:
+          - "80:80"
+        volumes:
+          - ./:/var/www
+          - ./config/nginx:/etc/nginx/conf.d
+          - ./logs:/var/log/nginx/
+        depends_on:
+          - php
+          - mysql
+        networks:
+          - internal
+    php:
+        image: auth-backend-php:dev
+        container_name: php
+        volumes:
+          - ./:/var/www
+          - ./config/php/php.ini:/usr/local/etc/php/php.ini
+        ports:
+          - "9001:9000"
+        networks:
+          - internal
+        env_file:
+          - .env
+    mysql:
+        image: mysql:8.0
+        container_name: mysql
+        restart: unless-stopped
+        ports:
+          - "3306:3306"
+        volumes:
+          - ./mysql:/var/lib/mysql
+          - ./config/database:/docker-entrypoint-initdb.d/:ro
+        environment:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: $DB_DATABASE
+          MYSQL_USER: $DB_USERNAME
+          MYSQL_PASSWORD: $DB_PASSWORD
+        networks:
+         - internal

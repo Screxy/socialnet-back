@@ -1,0 +1,11 @@
+.git
+.idea/
+vendor/
+mysql
+logs
+.env.dist
+public/log
+
+Makefile
+
+
