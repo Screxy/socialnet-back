@@ -7,20 +7,23 @@ class Request
     public const string METHOD_GET = 'GET';
     public const string METHOD_POST = 'POST';
 
-    private array $headers = [];
-    private string $path = '';
-    private array $body = [];
     private string $method = '';
+    private string $path = '';
+    private array $headers = [];
+    private array $parameters = [];
+    private array $body = [];
+    private array $customParams = [];
 
     /**
      * @param array $server
      */
     public function __construct(array $server = [])
     {
-        $this->headers = getallheaders();
-        $this->path = parse_url($server['REQUEST_URI'])['path'];
-        $this->body = json_decode(file_get_contents('php://input'), true) ?? [];
         $this->method = $server['REQUEST_METHOD'];
+        $this->path = parse_url($server['REQUEST_URI'])['path'];
+        $this->headers = getallheaders();
+        parse_str($server['QUERY_STRING'] ?? '', $this->parameters);
+        $this->body = json_decode(file_get_contents('php://input'), true) ?? [];
     }
 
     public function getHeaders(): array
@@ -41,5 +44,28 @@ class Request
     public function getMethod(): string
     {
         return $this->method;
+    }
+
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+
+    public function getAllCustomParams(): array
+    {
+        return $this->customParams;
+    }
+
+    public function getCustomParamsByKey(string $key): string
+    {
+        if (isset($this->customParams[$key])) {
+            return $this->customParams[$key];
+        }
+        return '';
+    }
+
+    public function setCustomParams(array $customParams): void
+    {
+        $this->customParams = $customParams;
     }
 }

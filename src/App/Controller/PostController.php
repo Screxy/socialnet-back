@@ -60,12 +60,18 @@ readonly class PostController
 
     public function getOne(Request $request): Response
     {
-        $id = 1;
-        $post = Post::getById($id);
+        $id = $request->getCustomParamsByKey('id');
+        $post = Post::getById((int)$id);
         if ($post === null) {
             return NotFoundResponse::create();
         }
 
         return new Response(200, $post->toArray());
+    }
+
+    public function setLike(Request $request): Response
+    {
+        var_dump($request->getAllCustomParams());
+        return new Response(200);
     }
 }

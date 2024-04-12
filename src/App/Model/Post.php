@@ -60,10 +60,10 @@ class Post extends ActiveRecordEntity
     {
         return [
             'id' => $this->getId(),
-            'authorId' => $this->getUserId(),
+            'author_id' => $this->getUserId(),
             'title' => $this->getTitle(),
             'text' => $this->getText(),
-            'createdAt' => $this->getCreatedAt(),
+            'created_at' => $this->getCreatedAt(),
         ];
     }
 }

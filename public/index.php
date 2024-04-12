@@ -43,13 +43,14 @@ $router->post('/authorize', [UserController::class, 'authorize']);
 $router->post('/register', [UserController::class, 'register']);
 
 $router->post('/post', [PostController::class, 'store']);
+$router->post('/post/:id/setLike', [PostController::class, 'setLike']);
 $router->get('/post', [PostController::class, 'getAll']);
-//$router->get('/post/:id', [PostController::class, 'getOne']);
+$router->get('/post/:id', [PostController::class, 'getOne']);
 
 $request = new Request($_SERVER);
 
 $router->addNotFoundHandler(function () {
-    echo new Response(404, ['message' => 'Not found']);
+    echo new Response(404, ['message' => 'Not found handler for this response']);
 });
 
 try {
