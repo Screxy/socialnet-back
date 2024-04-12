@@ -131,7 +131,7 @@ readonly class UserController
                 throw new InvalidArgumentException('Wrong token', 401);
             };
 
-            return new Response(200);
+            return new Response(200, $user->toArray());
         } catch (ExpiredException $exception) {
             $this->logger->error($exception->getMessage(), $exception->getTrace());
 
@@ -141,6 +141,29 @@ readonly class UserController
 
             return new Response(401, ['message' => 'Wrong token']);
         }
+    }
+
+    public function logout(Request $request): Response
+    {
+        try {
+            $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
+            $accessToken = str_replace('Bearer ', '', $authorizationHeader);
+
+            $key = (string)getenv('APP_KEY');
+
+            $payload = (array)JWT::decode($accessToken, new Key($key, 'HS256'));
+
+            $user = User::getById($payload['user_id']);
+            if ($user !== null) {
+                $user->setAccessToken('');
+                $user->save();
+            }
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(404);
+        }
+
+        return new Response(200);
     }
 
     /**

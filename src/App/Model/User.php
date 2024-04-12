@@ -10,6 +10,7 @@ class User extends ActiveRecordEntity
     protected string $email;
     protected string $password;
     protected ?string $accessToken = null;
+    protected ?string $createdAt = null;
 
     protected static function getTableName(): string
     {
@@ -54,5 +55,14 @@ class User extends ActiveRecordEntity
     public function setUsername(string $username): void
     {
         $this->username = $username;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'id'=> $this->getId(),
+            'username' => $this->getUsername(),
+            'email' => $this->getEmail(),
+        ];
     }
 }
