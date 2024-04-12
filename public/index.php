@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controller\PostController;
 use App\Controller\UserController;
 
 use Core\Request;
@@ -40,6 +41,10 @@ $router->get('/feed', [UserController::class, 'feed']);
 $router->get('/logout', [UserController::class, 'logout']);
 $router->post('/authorize', [UserController::class, 'authorize']);
 $router->post('/register', [UserController::class, 'register']);
+
+$router->post('/post', [PostController::class, 'store']);
+$router->get('/post', [PostController::class, 'getAll']);
+//$router->get('/post/:id', [PostController::class, 'getOne']);
 
 $request = new Request($_SERVER);
 

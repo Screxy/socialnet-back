@@ -9,13 +9,12 @@ use App\Exception\UserAlreadyExists;
 use App\Exception\WeakPassword;
 use App\Helper\ArrayValidator;
 use App\Model\User;
-use Core\NotFoundResponse;
+use App\Service\UserService;
 use Core\Request;
 use Core\Response;
 use DomainException;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -121,12 +120,7 @@ readonly class UserController
             $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
             $accessToken = str_replace('Bearer ', '', $authorizationHeader);
 
-            $key = (string)getenv('APP_KEY');
-
-            $payload = (array)JWT::decode($accessToken, new Key($key, 'HS256'));
-
-            $user = User::getById($payload['user_id']);
-
+            $user = UserService::getByAccessToken($accessToken);
             if ($user->getAccessToken() !== $accessToken) {
                 throw new InvalidArgumentException('Wrong token', 401);
             };
@@ -149,11 +143,7 @@ readonly class UserController
             $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
             $accessToken = str_replace('Bearer ', '', $authorizationHeader);
 
-            $key = (string)getenv('APP_KEY');
-
-            $payload = (array)JWT::decode($accessToken, new Key($key, 'HS256'));
-
-            $user = User::getById($payload['user_id']);
+            $user = UserService::getByAccessToken($accessToken);
             if ($user !== null) {
                 $user->setAccessToken('');
                 $user->save();
