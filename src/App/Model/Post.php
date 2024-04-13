@@ -6,7 +6,7 @@ namespace App\Model;
 
 class Post extends ActiveRecordEntity
 {
-    protected int $userId;
+    protected int $authorId;
     protected string $title;
     protected string $text;
     protected ?string $createdAt = null;
@@ -16,14 +16,14 @@ class Post extends ActiveRecordEntity
         return 'posts';
     }
 
-    public function getUserId(): int
+    public function getAuthorId(): int
     {
-        return $this->userId;
+        return $this->authorId;
     }
 
-    public function setUserId(int $userId): void
+    public function setAuthorId(int $authorId): void
     {
-        $this->userId = $userId;
+        $this->authorId = $authorId;
     }
 
     public function getTitle(): string
@@ -60,7 +60,7 @@ class Post extends ActiveRecordEntity
     {
         return [
             'id' => $this->getId(),
-            'author_id' => $this->getUserId(),
+            'author_id' => $this->getAuthorId(),
             'title' => $this->getTitle(),
             'text' => $this->getText(),
             'created_at' => $this->getCreatedAt(),

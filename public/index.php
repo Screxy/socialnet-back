@@ -46,6 +46,7 @@ $router->post('/post', [PostController::class, 'store']);
 $router->post('/post/:id/setLike', [PostController::class, 'setLike']);
 $router->get('/post', [PostController::class, 'getAll']);
 $router->get('/post/:id', [PostController::class, 'getOne']);
+$router->get('/test', [PostController::class, 'test']);
 
 $request = new Request($_SERVER);
 

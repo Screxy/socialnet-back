@@ -33,7 +33,7 @@ readonly class UserController
 
             $this->validateBody($body);
 
-            $user = User::where('email', '=', $body['email']);
+            $user = User::where('email', '=', $body['email'])[0];
             if ($user === null) {
                 throw new InvalidArgumentException('User not found', 404);
             }

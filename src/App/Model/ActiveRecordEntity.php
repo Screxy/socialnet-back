@@ -23,7 +23,8 @@ abstract class ActiveRecordEntity
 
     private function underScoreToCamelCase(string $str): string
     {
-        return lcfirst(str_replace('_', '', ucwords($str, '_')));
+        $res = lcfirst(str_replace('.', '', ucwords($str, '.')));
+        return lcfirst(str_replace('_', '', ucwords($res, '_')));
     }
 
     private function camelCaseToUnderscore(string $source): string
@@ -111,13 +112,29 @@ abstract class ActiveRecordEntity
         return $entities ? $entities[0] : null;
     }
 
-    public static function where(string $column, string $operator, string $value): ?static
+    /**
+     * @param string $column
+     * @param string $operator
+     * @param string $value
+     * @return static[]|null
+     */
+    public static function where(string $column, string $operator, string $value): ?array
     {
         $db = Db::getInstance();
         $sql = 'SELECT * FROM ' . static::getTableName() . ' WHERE ' . "$column $operator :$column";
+        /** @var static[] $entities */
         $entities = $db->query($sql, [":$column" => $value], static::class);
 
-        return $entities ? $entities[0] : null;
+        return $entities ?? null;
+    }
+
+    public static function query(string $sql, array $value): ?array
+    {
+        $db = Db::getInstance();
+        /** @var static[] $entities */
+        $entities = $db->query($sql, $value, static::class);
+
+        return $entities ?? null;
     }
 
     public function destroy(): void
