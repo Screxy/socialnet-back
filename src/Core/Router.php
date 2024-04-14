@@ -39,7 +39,7 @@ class Router
                 $callback = $handler->getCallback();
                 array_shift($matches);
                 if (!empty($matches)) {
-                    $params = $matches;
+                    $request->setCustomParams($this->parseCustomParameters($handler->getPath(),$matches));
                 }
                 break;
             }
@@ -69,6 +69,17 @@ class Router
         return '/^' . $pattern . '\/?$/';
     }
 
+    private function parseCustomParameters(string $path, array $params): array
+    {
+        preg_match_all('#:\w+#', $path, $matches);
+        $matches = $matches[0];
+        $preparedParams = [];
+        foreach ($matches as $key => $match) {
+            $paramKey = str_replace(':', '', $match);
+            $preparedParams[$paramKey] = $params[$key];
+        }
+        return $preparedParams;
+    }
 
     public function addNotFoundHandler(callable $handler): void
     {

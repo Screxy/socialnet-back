@@ -9,13 +9,12 @@ use App\Exception\UserAlreadyExists;
 use App\Exception\WeakPassword;
 use App\Helper\ArrayValidator;
 use App\Model\User;
-use Core\NotFoundResponse;
+use App\Service\UserService;
 use Core\Request;
 use Core\Response;
 use DomainException;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -34,7 +33,7 @@ readonly class UserController
 
             $this->validateBody($body);
 
-            $user = User::where('email', '=', $body['email']);
+            $user = User::where('email', '=', $body['email'])[0];
             if ($user === null) {
                 throw new InvalidArgumentException('User not found', 404);
             }
@@ -75,9 +74,12 @@ readonly class UserController
             if (User::where('email', '=', $body['email'])) {
                 throw UserAlreadyExists::create();
             }
-
+            if (User::where('username', '=', $body['username'])) {
+                throw UserAlreadyExists::create();
+            }
             $userData = [
                 $body['email'],
+                $body['username'],
             ];
 
             $zxcvbn = new Zxcvbn();
@@ -95,6 +97,7 @@ readonly class UserController
 
             $user = new User();
             $user->setEmail($body['email']);
+            $user->setUsername($body['username']);
             $user->setPassword($body['password']);
             $user->save();
 
@@ -117,17 +120,12 @@ readonly class UserController
             $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
             $accessToken = str_replace('Bearer ', '', $authorizationHeader);
 
-            $key = (string)getenv('APP_KEY');
-
-            $payload = (array)JWT::decode($accessToken, new Key($key, 'HS256'));
-
-            $user = User::getById($payload['user_id']);
-
+            $user = UserService::getByAccessToken($accessToken);
             if ($user->getAccessToken() !== $accessToken) {
                 throw new InvalidArgumentException('Wrong token', 401);
             };
 
-            return new Response(200);
+            return new Response(200, $user->toArray());
         } catch (ExpiredException $exception) {
             $this->logger->error($exception->getMessage(), $exception->getTrace());
 
@@ -137,6 +135,25 @@ readonly class UserController
 
             return new Response(401, ['message' => 'Wrong token']);
         }
+    }
+
+    public function logout(Request $request): Response
+    {
+        try {
+            $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
+            $accessToken = str_replace('Bearer ', '', $authorizationHeader);
+
+            $user = UserService::getByAccessToken($accessToken);
+            if ($user !== null) {
+                $user->setAccessToken('');
+                $user->save();
+            }
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(404);
+        }
+
+        return new Response(200);
     }
 
     /**
