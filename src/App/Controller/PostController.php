@@ -76,11 +76,15 @@ readonly class PostController
         $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
         $accessToken = str_replace('Bearer ', '', $authorizationHeader);
         $user = UserService::getByAccessToken($accessToken);
+        if ($user === null) {
+            return NotFoundResponse::create();
+        }
+        $this->logger->info('info',[$user->getId()]);
         $posts = PostWithLike::query(
             'SELECT posts.*,
             (IF(post_likes.user_id = :pl_user_id, 1, 0)) AS liked
             FROM posts
-            LEFT JOIN post_likes ON posts.id = post_likes.post_id AND post_likes.user_id = :pl_user_id where posts.id = :pl_user_id',
+            LEFT JOIN post_likes ON posts.id = post_likes.post_id AND post_likes.user_id = :pl_user_id where posts.author_id = :pl_user_id',
             [':pl_user_id' => $user->getId()]
         );
         $response = [];
@@ -90,7 +94,7 @@ readonly class PostController
         foreach ($posts as $post) {
             $response[] = $post->toArray();
         }
-
+        $this->logger->info('response', $response);
         return new Response(200, $response);
     }
 
@@ -117,10 +121,7 @@ readonly class PostController
         $accessToken = str_replace('Bearer ', '', $authorizationHeader);
         $user = UserService::getByAccessToken($accessToken);
 
-        if ($post === null) {
-            return NotFoundResponse::create();
-        }
-        if ($user === null) {
+        if ($post === null || $user === null) {
             return NotFoundResponse::create();
         }
 
