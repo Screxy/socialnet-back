@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS posts (
     id INT AUTO_INCREMENT,
     PRIMARY KEY (id),
-    user_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    author_id INT,
+    FOREIGN KEY (author_id) REFERENCES users(id),
     title VARCHAR(255),
     text VARCHAR(1600),
     created_at timestamp default current_timestamp

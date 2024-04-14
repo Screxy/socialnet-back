@@ -9,7 +9,7 @@ build.container.dev:
 build-dev: build.container.dev
 
 build-prod:
-	docker build -t screxy/socialnet-backend-php:prod .
+	docker build -f Dockerfile.prod --platform=linux/amd64 -t screxy/socialnet-backend-php:prod .
 
 up:
 	docker compose up -d
