@@ -128,6 +128,11 @@ abstract class ActiveRecordEntity
         return $entities ?? null;
     }
 
+    /**
+     * @param string $sql
+     * @param array $value
+     * @return static[]|null
+     */
     public static function query(string $sql, array $value): ?array
     {
         $db = Db::getInstance();

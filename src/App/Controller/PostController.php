@@ -54,7 +54,7 @@ readonly class PostController
         $accessToken = str_replace('Bearer ', '', $authorizationHeader);
         $user = UserService::getByAccessToken($accessToken);
         $posts = PostWithLike::query(
-        'SELECT posts.*,
+            'SELECT posts.*,
             (IF(post_likes.user_id = :pl_user_id, 1, 0)) AS liked
             FROM posts
             LEFT JOIN post_likes ON posts.id = post_likes.post_id AND post_likes.user_id = :pl_user_id',
@@ -70,6 +70,30 @@ readonly class PostController
 
         return new Response(200, $response);
     }
+
+    public function getAllByUser(Request $request): Response
+    {
+        $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
+        $accessToken = str_replace('Bearer ', '', $authorizationHeader);
+        $user = UserService::getByAccessToken($accessToken);
+        $posts = PostWithLike::query(
+            'SELECT posts.*,
+            (IF(post_likes.user_id = :pl_user_id, 1, 0)) AS liked
+            FROM posts
+            LEFT JOIN post_likes ON posts.id = post_likes.post_id AND post_likes.user_id = :pl_user_id where posts.id = :pl_user_id',
+            [':pl_user_id' => $user->getId()]
+        );
+        $response = [];
+        if ($posts === null) {
+            return NotFoundResponse::create();
+        }
+        foreach ($posts as $post) {
+            $response[] = $post->toArray();
+        }
+
+        return new Response(200, $response);
+    }
+
 
     public function getOne(Request $request): Response
     {
@@ -101,30 +125,18 @@ readonly class PostController
         }
 
         if ($like) {
-            $postLike = new PostLike();
-            $postLike->setPostId($post->getId());
-            $postLike->setUserId($user->getId());
-            $postLike->save();
-        } else {
-            $postLikes = PostLikeRepository::getByUserId($user->getId());
-            foreach ($postLikes as $postLike) {
-                if ($postLike->getPostId() === $post->getId()) {
-                    $postLike->destroy();
-                    break;
-                }
+            $postLike = PostLikeRepository::getOneByUserIdAndPostId($user->getId(), $post->getId());
+            if (!$postLike) {
+                $postLike = new PostLike();
+                $postLike->setPostId($post->getId());
+                $postLike->setUserId($user->getId());
+                $postLike->save();
             }
+        } else {
+            $postLikes = PostLikeRepository::getOneByUserIdAndPostId($user->getId(), $post->getId());
+            $postLikes?->destroy();
         }
 
         return new Response(200);
-    }
-
-    public function test(): void
-    {
-////        $str = 'posts.user_id';
-////        $res = lcfirst(str_replace('.', '', ucwords($str, '.')));
-////        $res2 = lcfirst(str_replace('_', '', ucwords($res, '_')));
-////        var_dump($res2);
-//
-//        var_dump($res);
     }
 }

@@ -26,7 +26,7 @@ class PostWithLike extends Post
             'title' => $this->getTitle(),
             'text' => $this->getText(),
             'created_at' => $this->getCreatedAt(),
-            'liked' => $this->getLiked(),
+            'liked' => (boolean)$this->getLiked(),
         ];
     }
 

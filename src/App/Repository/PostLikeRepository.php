@@ -25,4 +25,11 @@ class PostLikeRepository
     {
         return PostLike::where('post_id', '=', (string)$id);
     }
+
+    public static function getOneByUserIdAndPostId(int $userId, int $postId): ?PostLike
+    {
+        $result = PostLike::query('select * from post_likes where user_id = :userId and post_id = :postId',
+            [':userId' => $userId, ':postId' => $postId]);
+        return $result ? $result[0] : null;
+    }
 }

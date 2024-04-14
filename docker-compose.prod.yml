@@ -9,10 +9,12 @@ services:
         container_name: nginx
         ports:
           - "80:80"
+          - "443:443"
         volumes:
           - ./:/var/www
           - ./config/nginx:/etc/nginx/conf.d
           - ./logs:/var/log/nginx/
+          - /etc/letsencrypt:/etc/letsencrypt/
         depends_on:
           - php
           - mysql
@@ -22,8 +24,8 @@ services:
         image: screxy/socialnet-backend-php:dev
         container_name: php
         volumes:
-          - ./:/var/www
-          - ./config/php/php.ini:/usr/local/etc/php/php.ini
+#          - ./:/var/www
+#          - ./config/php/php.ini:/usr/local/etc/php/php.ini
         ports:
           - "9001:9000"
         networks:
