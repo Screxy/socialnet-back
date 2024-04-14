@@ -21,7 +21,7 @@ services:
         networks:
           - internal
     php:
-        image: screxy/socialnet-backend-php:dev
+        image: screxy/socialnet-backend-php:prod
         container_name: php
         volumes:
 #          - ./:/var/www
