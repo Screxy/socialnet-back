@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Enum\PasswordStrength;
+use App\Exception\Unauthorized;
 use App\Exception\UserAlreadyExists;
 use App\Exception\WeakPassword;
 use App\Helper\ArrayValidator;
+use App\Helper\RequestValidator;
 use App\Model\User;
 use App\Service\UserService;
 use Core\Request;
@@ -33,11 +35,12 @@ readonly class UserController
 
             $this->validateBody($body);
 
-            $user = User::where('email', '=', $body['email'])[0];
-            if ($user === null) {
-                throw new InvalidArgumentException('User not found', 404);
-            }
+            $user = User::where('email', '=', $body['email']);
 
+            if ($user === null) {
+                throw new InvalidArgumentException('User not found', 401);
+            }
+            $user = $user[0];
             $isValid = password_verify($body['password'], $user->getPassword());
 
             if (!$isValid) {
@@ -117,13 +120,15 @@ readonly class UserController
     public function feed(Request $request): Response
     {
         try {
-            $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
-            $accessToken = str_replace('Bearer ', '', $authorizationHeader);
+            RequestValidator::validateAuth($request);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(401);
+        }
+        try {
 
-            $user = UserService::getByAccessToken($accessToken);
-            if ($user->getAccessToken() !== $accessToken) {
-                throw new InvalidArgumentException('Wrong token', 401);
-            };
+            /** @var User $user */
+            $user = $request->getCustomParamsByKey('user');
 
             return new Response(200, $user->toArray());
         } catch (ExpiredException $exception) {
@@ -150,7 +155,7 @@ readonly class UserController
             }
         } catch (\Throwable $exception) {
             $this->logger->error($exception->getMessage(), $exception->getTrace());
-            return new Response(404);
+            return new Response(401);
         }
 
         return new Response(200);

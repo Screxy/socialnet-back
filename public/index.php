@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controller\PostController;
 use App\Controller\UserController;
 
+use App\Helper\RequestValidator;
 use Core\Request;
 use Core\Response;
 use Core\Router;

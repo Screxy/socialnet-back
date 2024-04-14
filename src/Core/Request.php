@@ -56,7 +56,7 @@ class Request
         return $this->customParams;
     }
 
-    public function getCustomParamsByKey(string $key): string
+    public function getCustomParamsByKey(string $key): mixed
     {
         if (isset($this->customParams[$key])) {
             return $this->customParams[$key];
@@ -66,6 +66,8 @@ class Request
 
     public function setCustomParams(array $customParams): void
     {
-        $this->customParams = $customParams;
+        foreach ($customParams as $key => $customParam) {
+            $this->customParams[$key] = $customParam;
+        }
     }
 }

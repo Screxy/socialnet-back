@@ -125,7 +125,7 @@ abstract class ActiveRecordEntity
         /** @var static[] $entities */
         $entities = $db->query($sql, [":$column" => $value], static::class);
 
-        return $entities ?? null;
+        return $entities ?: null;
     }
 
     /**
@@ -139,7 +139,7 @@ abstract class ActiveRecordEntity
         /** @var static[] $entities */
         $entities = $db->query($sql, $value, static::class);
 
-        return $entities ?? null;
+        return $entities ?: null;
     }
 
     public function destroy(): void
