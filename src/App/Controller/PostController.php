@@ -6,14 +6,19 @@ namespace App\Controller;
 
 use App\Db;
 use App\Helper\ArrayValidator;
+use App\Helper\RequestValidator;
 use App\Model\Post;
 use App\Model\PostLike;
 use App\Model\PostWithLike;
+use App\Model\User;
 use App\Repository\PostLikeRepository;
 use App\Service\UserService;
 use Core\NotFoundResponse;
 use Core\Request;
 use Core\Response;
+use DomainException;
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\SignatureInvalidException;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -26,12 +31,25 @@ readonly class PostController
     public function store(Request $request): Response
     {
         try {
+            RequestValidator::validateAuth($request);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(401);
+        }
+        try {
             $body = $request->getBody();
             ArrayValidator::validateKeysOnEmpty(['title', 'text'], $body);
 
-            $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
-            $accessToken = str_replace('Bearer ', '', $authorizationHeader);
-            $user = UserService::getByAccessToken($accessToken);
+            $valid = RequestValidator::validate($body, [
+                'title' => 'max:255',
+                'text' => 'max:1600'
+            ]);
+
+            if ($valid !== true) {
+                return new Response(400, $valid);
+            }
+            /** @var User $user */
+            $user = $request->getCustomParamsByKey('user');
 
             $post = new Post();
             $post->setAuthorId($user->getId());
@@ -50,9 +68,14 @@ readonly class PostController
 
     public function getAll(Request $request): Response
     {
-        $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
-        $accessToken = str_replace('Bearer ', '', $authorizationHeader);
-        $user = UserService::getByAccessToken($accessToken);
+        try {
+            RequestValidator::validateAuth($request);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(401);
+        }
+        /** @var User $user */
+        $user = $request->getCustomParamsByKey('user');
         $posts = PostWithLike::query(
             'SELECT posts.*,
             (IF(post_likes.user_id = :pl_user_id, 1, 0)) AS liked
@@ -73,13 +96,14 @@ readonly class PostController
 
     public function getAllByUser(Request $request): Response
     {
-        $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
-        $accessToken = str_replace('Bearer ', '', $authorizationHeader);
-        $user = UserService::getByAccessToken($accessToken);
-        if ($user === null) {
-            return NotFoundResponse::create();
+        try {
+            RequestValidator::validateAuth($request);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(401);
         }
-        $this->logger->info('info',[$user->getId()]);
+        /** @var User $user */
+        $user = $request->getCustomParamsByKey('user');
         $posts = PostWithLike::query(
             'SELECT posts.*,
             (IF(post_likes.user_id = :pl_user_id, 1, 0)) AS liked
@@ -87,10 +111,11 @@ readonly class PostController
             LEFT JOIN post_likes ON posts.id = post_likes.post_id AND post_likes.user_id = :pl_user_id where posts.author_id = :pl_user_id',
             [':pl_user_id' => $user->getId()]
         );
-        $response = [];
         if ($posts === null) {
             return NotFoundResponse::create();
         }
+
+        $response = [];
         foreach ($posts as $post) {
             $response[] = $post->toArray();
         }
@@ -101,6 +126,12 @@ readonly class PostController
 
     public function getOne(Request $request): Response
     {
+        try {
+            RequestValidator::validateAuth($request);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(401);
+        }
         $id = $request->getCustomParamsByKey('id');
         $post = Post::getById((int)$id);
         if ($post === null) {
@@ -112,16 +143,21 @@ readonly class PostController
 
     public function setLike(Request $request): Response
     {
+        try {
+            RequestValidator::validateAuth($request);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            return new Response(401);
+        }
         $id = $request->getCustomParamsByKey('id');
         $like = $request->getBody()['like'];
 
         $post = Post::getById((int)$id);
 
-        $authorizationHeader = $request->getHeaders()['Authorization'] ?? '';
-        $accessToken = str_replace('Bearer ', '', $authorizationHeader);
-        $user = UserService::getByAccessToken($accessToken);
+        /** @var User $user */
+        $user = $request->getCustomParamsByKey('user');
 
-        if ($post === null || $user === null) {
+        if ($post === null) {
             return NotFoundResponse::create();
         }
 
