@@ -33,7 +33,14 @@ readonly class UserController
         try {
             $body = $request->getBody();
 
-            $this->validateBody($body);
+            $valid = RequestValidator::validate($body, [
+                'email' => 'email',
+                'password' => 'min:6'
+            ]);
+
+            if ($valid !== true) {
+                return new Response(400, $valid);
+            }
 
             $user = User::where('email', '=', $body['email']);
 
@@ -72,7 +79,14 @@ readonly class UserController
         try {
             $body = $request->getBody();
 
-            $this->validateBody($body);
+            $valid = RequestValidator::validate($body, [
+                'email' => 'email',
+                'password' => 'min:6'
+            ]);
+
+            if ($valid !== true) {
+                return new Response(400, $valid);
+            }
 
             if (User::where('email', '=', $body['email'])) {
                 throw UserAlreadyExists::create();

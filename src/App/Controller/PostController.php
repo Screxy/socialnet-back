@@ -40,6 +40,14 @@ readonly class PostController
             $body = $request->getBody();
             ArrayValidator::validateKeysOnEmpty(['title', 'text'], $body);
 
+            $valid = RequestValidator::validate($body, [
+                'title' => 'max:255',
+                'text' => 'max:1600'
+            ]);
+
+            if ($valid !== true) {
+                return new Response(400, $valid);
+            }
             /** @var User $user */
             $user = $request->getCustomParamsByKey('user');
 
